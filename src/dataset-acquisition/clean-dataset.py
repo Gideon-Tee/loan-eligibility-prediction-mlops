@@ -85,8 +85,8 @@ def main():
         timestamp = get_latest_timestamp(s3, RAW_PREFIX)
         print(f"No timestamp provided. Using latest: {timestamp}")
 
-    raw_prefix = f'{RAW_PREFIX}{timestamp}/'
-    cleaned_prefix = f'{CLEANED_PREFIX}{timestamp}/'
+    raw_prefix = f'raw/dataset-{timestamp}/'
+    cleaned_prefix = f'cleaned/dataset-{timestamp}/'
 
     for fname in FILES:
         s3_key = raw_prefix + fname

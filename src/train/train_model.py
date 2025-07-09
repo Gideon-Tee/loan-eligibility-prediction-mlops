@@ -52,8 +52,8 @@ def main():
         timestamp = get_latest_timestamp(s3, CLEANED_PREFIX)
         print(f"No timestamp provided. Using latest: {timestamp}")
 
-    cleaned_prefix = f'{CLEANED_PREFIX}{timestamp}/'
-    models_prefix = f'{MODELS_PREFIX}{timestamp}/'
+    cleaned_prefix = f'{CLEANED_PREFIX}dataset-{timestamp}/'
+    models_prefix = f'{MODELS_PREFIX}dataset-{timestamp}/'
     os.makedirs('artifacts', exist_ok=True)
 
     # Download train and test

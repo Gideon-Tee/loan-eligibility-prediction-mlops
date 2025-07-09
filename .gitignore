@@ -4,3 +4,12 @@ venv/
 **/*env
 kaggle*.json
 **/mlruns/
+
+airflow/logs/
+airflow/airflow.*
+airflow/simple_auth_manager_passwords*
+airflow/airflow-webserver.pid
+airflow/airflow-scheduler.pid
+airflow/airflow-worker*.pid
+
+
