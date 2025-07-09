@@ -15,6 +15,10 @@ load_dotenv()
 import mlflow
 import mlflow.sklearn
 
+# Set MLflow tracking to use project directory
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+mlflow.set_tracking_uri(f"file://{PROJECT_ROOT}/mlruns")
+
 CLEANED_PREFIX = 'cleaned/'
 MODELS_PREFIX = 'models/'
 S3_BUCKET = 'loan-eligibility-mlops'
@@ -73,6 +77,7 @@ def main():
     }
     best_model = None
     best_acc = 0
+    best_run_id = None  # Track the best run ID
     for name, model in models.items():
         with mlflow.start_run(run_name=name) as run:
             model.fit(X_train, y_train)
@@ -96,10 +101,12 @@ def main():
                 if test_acc > best_acc:
                     best_acc = test_acc
                     best_model = (name, model)
+                    best_run_id = run.info.run_id  # Store the best run ID
             else:
                 if acc > best_acc:
                     best_acc = acc
                     best_model = (name, model)
+                    best_run_id = run.info.run_id  # Store the best run ID
             # Log model artifact
             model_path = f'artifacts/{name}_model.pkl'
             joblib.dump(model, model_path)
@@ -114,8 +121,26 @@ def main():
         s3_key = models_prefix + 'model.pkl'
         upload_file_to_s3(s3, model_path, s3_key)
         print(f"Best model: {model_name} (accuracy: {best_acc:.4f})")
+
+        # MLflow model registration and stage transition
+        from mlflow.tracking import MlflowClient
+        print(f"Attempting to register model with run_id: {best_run_id}")
+        if best_run_id:
+            try:
+                model_uri = f"runs:/{best_run_id}/model"
+                print(f"Registering model with URI: {model_uri}")
+                result = mlflow.register_model(
+                    model_uri=model_uri,
+                    name="LoanEligibilityModel"
+                )
+                print(f"Successfully registered model version {result.version}.")
+            except Exception as e:
+                print(f"Error during model registration: {e}")
+                print("Continuing without model registration...")
+        else:
+            print("Could not find run_id for best model; skipping registration.")
     else:
         print("No model was trained.")
 
 if __name__ == '__main__':
-    main() 
+    main()

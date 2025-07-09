@@ -6,6 +6,10 @@ import os
 import re
 from datetime import datetime, timedelta
 import boto3
+import mlflow
+from dotenv import load_dotenv
+
+load_dotenv()
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
