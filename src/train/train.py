@@ -1,4 +1,4 @@
-import boto3
+# import boto3
 import pandas as pd
 import mlflow
 import mlflow.sklearn
@@ -6,10 +6,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
-s3 = boto3.client('s3')
+# s3 = boto3.client('s3')
 
 # Download cleaned data
-s3.download_file('your-bucket', 'cleaned/cleaned_dataset.csv', 'cleaned_dataset.csv')
+# s3.download_file('your-bucket', 'cleaned/cleaned_dataset.csv', 'cleaned_dataset.csv')
 data = pd.read_csv('cleaned_dataset.csv')
 
 # Preprocess

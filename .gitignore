@@ -1,3 +1,5 @@
 venv/
 .idea/
 **/venv
+**/*env
+kaggle.json
