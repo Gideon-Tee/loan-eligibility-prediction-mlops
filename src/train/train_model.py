@@ -12,6 +12,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from dotenv import load_dotenv
 load_dotenv()
+import mlflow
+import mlflow.sklearn
 
 CLEANED_PREFIX = 'cleaned/'
 MODELS_PREFIX = 'models/'
@@ -72,24 +74,37 @@ def main():
     best_model = None
     best_acc = 0
     for name, model in models.items():
-        model.fit(X_train, y_train)
-        preds = model.predict(X_train)
-        acc = accuracy_score(y_train, preds)
-        print(f"\n{name} - Train Accuracy: {acc:.4f}")
-        print(classification_report(y_train, preds))
-        # Evaluate on test if available
-        if y_test is not None:
-            test_preds = model.predict(X_test)
-            test_acc = accuracy_score(y_test, test_preds)
-            print(f"{name} - Test Accuracy: {test_acc:.4f}")
-            print(classification_report(y_test, test_preds))
-            if test_acc > best_acc:
-                best_acc = test_acc
-                best_model = (name, model)
-        else:
-            if acc > best_acc:
-                best_acc = acc
-                best_model = (name, model)
+        with mlflow.start_run(run_name=name) as run:
+            model.fit(X_train, y_train)
+            preds = model.predict(X_train)
+            acc = accuracy_score(y_train, preds)
+            print(f"\n{name} - Train Accuracy: {acc:.4f}")
+            print(classification_report(y_train, preds))
+            mlflow.log_param('model_type', name)
+            if name == 'RandomForest':
+                mlflow.log_param('n_estimators', model.n_estimators)
+            if name == 'LogisticRegression':
+                mlflow.log_param('max_iter', model.max_iter)
+            mlflow.log_metric('train_accuracy', acc)
+            # Evaluate on test if available
+            if y_test is not None:
+                test_preds = model.predict(X_test)
+                test_acc = accuracy_score(y_test, test_preds)
+                print(f"{name} - Test Accuracy: {test_acc:.4f}")
+                print(classification_report(y_test, test_preds))
+                mlflow.log_metric('test_accuracy', test_acc)
+                if test_acc > best_acc:
+                    best_acc = test_acc
+                    best_model = (name, model)
+            else:
+                if acc > best_acc:
+                    best_acc = acc
+                    best_model = (name, model)
+            # Log model artifact
+            model_path = f'artifacts/{name}_model.pkl'
+            joblib.dump(model, model_path)
+            mlflow.sklearn.log_model(model, artifact_path="model")
+            print(f"MLflow run for {name}: {mlflow.get_artifact_uri('model')}")
 
     # Save and upload best model
     if best_model:
