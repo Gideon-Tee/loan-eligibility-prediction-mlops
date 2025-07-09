@@ -1,35 +1,26 @@
 import os
-import zipfile
 import glob
 import boto3
 from datetime import datetime
 from dotenv import load_dotenv
+import kagglehub
 
 # Load environment variables
 load_dotenv()
 
-# Kaggle credentials (if not using kaggle.json)
-os.environ['KAGGLE_USERNAME'] = os.getenv('KAGGLE_USERNAME', '')
-os.environ['KAGGLE_KEY'] = os.getenv('KAGGLE_KEY', '')
-
-import kaggle
-
 # Parameters
-KAGGLE_DATASET = 'ravirajsinh45/loan-eligibility-dataset'
-LOCAL_RAW_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/raw'))
-TIMESTAMP = datetime.now().strftime('%Y%m%d_%H%M%S')
-DATASET_DIR = os.path.join(LOCAL_RAW_DIR, f'dataset-{TIMESTAMP}')
+KAGGLE_DATASET = 'vikasukani/loan-eligible-dataset'
 S3_BUCKET = 'loan-eligibility-mlops'
+TIMESTAMP = datetime.now().strftime('%Y%m%d_%H%M%S')
 S3_PREFIX = f'raw/dataset-{TIMESTAMP}/'
 
-os.makedirs(DATASET_DIR, exist_ok=True)
+# Download latest version using kagglehub
+print(f"Downloading {KAGGLE_DATASET} using kagglehub ...")
+path = kagglehub.dataset_download(KAGGLE_DATASET)
+print("Path to dataset files:", path)
 
-# Download and unzip dataset from Kaggle
-print(f"Downloading {KAGGLE_DATASET} to {DATASET_DIR} ...")
-kaggle.api.dataset_download_files(KAGGLE_DATASET, path=DATASET_DIR, unzip=True)
-
-# Find all CSV files
-csv_files = glob.glob(os.path.join(DATASET_DIR, '*.csv'))
+# Find all CSV files in the downloaded directory
+csv_files = glob.glob(os.path.join(path, '*.csv'))
 
 # Upload CSVs to S3
 s3 = boto3.client('s3')
