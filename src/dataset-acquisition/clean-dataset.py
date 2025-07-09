@@ -7,6 +7,9 @@ import numpy as np
 from io import BytesIO
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
+from dotenv import load_dotenv
+load_dotenv()
+
 
 RAW_PREFIX = 'raw/'
 CLEANED_PREFIX = 'cleaned/'
