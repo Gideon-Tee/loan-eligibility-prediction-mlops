@@ -94,5 +94,15 @@ with DAG(
         },
     )
 
+    # Task 5: A/B Evaluation
+    ab_evaluation = BashOperator(
+        task_id='ab_evaluation',
+        bash_command='{{ params.python }} "{{ params.script }}" --timestamp {{ ti.xcom_pull(task_ids="extract_timestamp", key="timestamp") }} --auto-promote',
+        params={
+            'python': get_python(),
+            'script': get_script_path('src/evaluation/ab_evaluation.py')
+        },
+    )
+
     # Orchestration
-    download_dataset >> extract_timestamp >> clean_dataset >> train_model 
+    download_dataset >> extract_timestamp >> clean_dataset >> train_model >> ab_evaluation 
