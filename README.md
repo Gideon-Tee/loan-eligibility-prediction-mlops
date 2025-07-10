@@ -437,21 +437,10 @@ MLFLOW_TRACKING_URI=file:///path/to/mlruns
    - Verify port configuration
    - Check model loading and caching
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- Kaggle for providing the loan eligibility dataset
+- Kaggle for providing the loan eligibility [dataset](https://www.kaggle.com/datasets/vikasukani/loan-eligible-dataset/data)
 - Apache Airflow for workflow orchestration
 - MLflow for experiment tracking and model management
 - AWS for cloud infrastructure and S3 storage
