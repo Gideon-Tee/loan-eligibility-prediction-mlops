@@ -118,13 +118,14 @@ def main():
         model_name, model_obj = best_model
         model_path = f'artifacts/{model_name}_model.pkl'
         joblib.dump(model_obj, model_path)
-        s3_key = models_prefix + 'model.pkl'
+        s3_key = 'models/model.pkl'  # legacy, keep for now
         upload_file_to_s3(s3, model_path, s3_key)
         print(f"Best model: {model_name} (accuracy: {best_acc:.4f})")
 
         # MLflow model registration and stage transition
         from mlflow.tracking import MlflowClient
         print(f"Attempting to register model with run_id: {best_run_id}")
+        model_version = None
         if best_run_id:
             try:
                 model_uri = f"runs:/{best_run_id}/model"
@@ -134,11 +135,32 @@ def main():
                     name="LoanEligibilityModel"
                 )
                 print(f"Successfully registered model version {result.version}.")
+                model_version = result.version
             except Exception as e:
                 print(f"Error during model registration: {e}")
                 print("Continuing without model registration...")
         else:
             print("Could not find run_id for best model; skipping registration.")
+
+        # S3 versioned model storage (flat structure)
+        if model_version is not None:
+            import json
+            version_dir = f"models/version{model_version}/"
+            # Upload model.pkl to S3
+            s3.upload_file(model_path, S3_BUCKET, version_dir + 'model.pkl')
+            # Save metadata
+            metadata = {
+                "model_name": "LoanEligibilityModel",
+                "version": model_version,
+                "run_id": best_run_id,
+                "metrics": {
+                    "best_accuracy": best_acc
+                }
+            }
+            with open('artifacts/metadata.json', 'w') as f:
+                json.dump(metadata, f)
+            s3.upload_file('artifacts/metadata.json', S3_BUCKET, version_dir + 'metadata.json')
+            print(f"Uploaded versioned model and metadata to s3://{S3_BUCKET}/{version_dir}")
     else:
         print("No model was trained.")
 

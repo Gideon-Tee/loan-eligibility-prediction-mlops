@@ -59,14 +59,14 @@ with DAG(
 ) as dag:
     
     # Task 1: Download dataset
-    download_dataset = BashOperator(
-        task_id='download_dataset',
-        bash_command='{{ params.python }} "{{ params.script }}"',
-        params={
-            'python': get_python(),
-            'script': get_script_path('src/dataset-acquisition/download-dataset.py')
-        },
-    )
+    # download_dataset = BashOperator(
+    #     task_id='download_dataset',
+    #     bash_command='{{ params.python }} "{{ params.script }}"',
+    #     params={
+    #         'python': get_python(),
+    #         'script': get_script_path('src/dataset-acquisition/download-dataset.py')
+    #     },
+    # )
 
     # Task 2: Extract latest timestamp from data/raw/
     extract_timestamp = PythonOperator(
@@ -105,4 +105,4 @@ with DAG(
     )
 
     # Orchestration
-    download_dataset >> extract_timestamp >> clean_dataset >> train_model >> ab_evaluation 
+    extract_timestamp >> clean_dataset >> train_model >> ab_evaluation 

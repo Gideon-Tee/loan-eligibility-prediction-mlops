@@ -125,8 +125,8 @@ def compare_models(metrics_a, metrics_b):
     
     return comparison
 
-def promote_model(model_name, version, stage="Production"):
-    """Promote a model to a specific stage"""
+def promote_model(model_name, version, stage="Production", s3=None):
+    """Promote a model to a specific stage and sync to S3"""
     client = MlflowClient()
     try:
         client.transition_model_version_stage(
@@ -135,10 +135,26 @@ def promote_model(model_name, version, stage="Production"):
             stage=stage
         )
         print(f"Successfully promoted {model_name} v{version} to {stage}")
+        # S3 sync
+        if s3:
+            sync_model_stage_to_s3(s3, version, stage)
         return True
     except Exception as e:
         print(f"Error promoting model: {e}")
         return False
+
+def sync_model_stage_to_s3(s3, version, stage):
+    """Copy model.pkl and metadata.json from models/version<version>/ to models/<stage>/ in S3"""
+    src_prefix = f"models/version{version}/"
+    dst_prefix = f"models/{stage.lower()}/"
+    for fname in ["model.pkl", "metadata.json"]:
+        src_key = src_prefix + fname
+        dst_key = dst_prefix + fname
+        try:
+            s3.copy_object(Bucket=S3_BUCKET, CopySource={'Bucket': S3_BUCKET, 'Key': src_key}, Key=dst_key)
+            print(f"Copied {src_key} to {dst_key}")
+        except Exception as e:
+            print(f"Error copying {src_key} to {dst_key}: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description='A/B evaluation of ML models')
@@ -240,10 +256,12 @@ def main():
         winner_model = comparison['winner']
         winner_version = actual_version_b if winner_model == metrics_b['model_name'] else actual_version_a
         
-        if promote_model(winner_model, winner_version, "Production"):
-            print(f"✅ Winner {winner_model} v{winner_version} promoted to Production")
+        success = promote_model(winner_model, winner_version, "Production", s3=s3)
+        if not success:
+            print(f"⚠️ MLflow promotion failed, but syncing to S3 anyway.")
+            sync_model_stage_to_s3(s3, winner_version, "Production")
         else:
-            print(f"❌ Failed to promote {winner_model} v{winner_version}")
+            print(f"✅ Winner {winner_model} v{winner_version} promoted to Production and synced to S3")
 
     return comparison
 
