@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import boto3
 import joblib
+from flask_cors import CORS
 
 S3_BUCKET = 'loan-eligibility-mlops'
 PROD_MODEL_KEY = 'models/production/model.pkl'
@@ -16,6 +17,7 @@ LOCAL_MODEL_PATH = '/tmp/model_production.pkl'
 LOCAL_METADATA_PATH = '/tmp/metadata_production.json'
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Global model cache
 model_cache = {}
