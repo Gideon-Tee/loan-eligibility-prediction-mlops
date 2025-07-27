@@ -341,7 +341,69 @@ curl -X POST http://localhost:5050/predict_batch \
 - **Model Storage**: Trained models stored in S3
 - **Evaluation Reports**: A/B testing results stored as JSON files
 
-## 🚀 Deployment
+## 🚀 AWS Deployment
+
+This section explains how to deploy the MLOps pipeline on AWS using Terraform and Docker Compose.
+
+### Prerequisites
+
+1. AWS CLI configured with appropriate credentials
+2. Terraform installed on your local machine
+3. An existing S3 bucket for MLflow artifacts
+4. An existing SSH key pair in AWS EC2
+
+### Deployment Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd loan-eligibility
+   ```
+
+2. **Configure environment variables**
+   - Copy `.env.example` to `.env`
+   - Update the values in `.env` with your AWS credentials and configuration
+
+3. **Initialize Terraform**
+   ```bash
+   cd terraform
+   terraform init
+   ```
+
+4. **Review the execution plan**
+   ```bash
+   terraform plan -var="key_name=your-key-pair-name"
+   ```
+
+5. **Apply the configuration**
+   ```bash
+   terraform apply -var="key_name=your-key-pair-name"
+   ```
+
+6. **Access the services**
+   - Airflow: http://<EC2_PUBLIC_IP>:8080
+   - MLflow: http://<EC2_PUBLIC_IP>:5000
+
+### Systemd Service
+
+The deployment includes a systemd service that automatically starts the Docker containers on system boot. The service is defined in `mlops.service` and is automatically installed during the EC2 instance initialization.
+
+To check the service status:
+```bash
+sudo systemctl status mlops
+```
+
+To view logs:
+```bash
+sudo journalctl -u mlops -f
+```
+
+### Security Considerations
+
+1. Update the security group rules in `main.tf` to restrict access to specific IP addresses
+2. Use AWS Secrets Manager or Parameter Store for sensitive information instead of environment variables
+3. Enable HTTPS for the Airflow and MLflow web interfaces using a reverse proxy like Nginx
+4. Regularly update the EC2 instance and Docker containers with security patches
 
 ### Local Development
 ```bash

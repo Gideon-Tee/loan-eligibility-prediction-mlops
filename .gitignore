@@ -12,5 +12,5 @@ airflow/airflow-webserver.pid
 airflow/airflow-scheduler.pid
 airflow/airflow-worker*.pid
 **/*.pyc
-
-
+*.service
+docker-compose.yml
