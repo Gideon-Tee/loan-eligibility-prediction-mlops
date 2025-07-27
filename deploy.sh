@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-PROJECT_DIR="/home/ubuntu/loan-eligibility"
-BACKUP_DIR="/home/ubuntu/backup-$(date +%Y%m%d_%H%M%S)"
+PROJECT_DIR="/home/ubuntu/loanflow/loan-eligibility-prediction-mlops"
+BACKUP_DIR="/home/ubuntu/loanflow/backup-$(date +%Y%m%d_%H%M%S)"
 
 echo "🚀 Starting deployment..."
 

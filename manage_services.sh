@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECT_DIR="/home/ubuntu/loan-eligibility"
+PROJECT_DIR="/home/ubuntu/loanflow/loan-eligibility-prediction-mlops"
 export AIRFLOW_HOME=$PROJECT_DIR/airflow
 
 case "$1" in
