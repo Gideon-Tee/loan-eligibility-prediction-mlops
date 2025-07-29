@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+PROJECT_ROOT = '/home/ubuntu/loanflow/loan-eligibility-prediction-mlops'
 
 
 def extract_latest_timestamp(**kwargs):
@@ -48,8 +48,8 @@ def get_script_path(script):
 
 def_args = {
     'owner': 'airflow',
-    'start_date': datetime.now() + timedelta(days=1),
-    'retries': 0,
+    'start_date': datetime(2024, 1, 1),
+    'retries': 1,
 }
 
 default_python = get_python()
@@ -65,11 +65,7 @@ with DAG(
     # Task 1: Download dataset
     download_dataset = BashOperator(
         task_id='download_dataset',
-        bash_command='{{ params.python }} "{{ params.script }}"',
-        params={
-            'python': get_python(),
-            'script': get_script_path('src/dataset-acquisition/download-dataset.py')
-        },
+        bash_command=f'cd {PROJECT_ROOT} && python3 src/dataset-acquisition/download-dataset.py',
     )
 
     # Task 2: Extract latest timestamp from data/raw/
@@ -81,31 +77,19 @@ with DAG(
     # Task 3: Clean dataset with timestamp
     clean_dataset = BashOperator(
         task_id='clean_dataset',
-        bash_command='{{ params.python }} "{{ params.script }}" --timestamp {{ ti.xcom_pull(task_ids="extract_timestamp", key="timestamp") }}',
-        params={
-            'python': get_python(),
-            'script': get_script_path('src/dataset-acquisition/clean-dataset.py')
-        },
+        bash_command=f'cd {PROJECT_ROOT} && python3 src/dataset-acquisition/clean-dataset.py --timestamp 20250709_105303',
     )
 
     # Task 4: Train model with timestamp
     train_model = BashOperator(
         task_id='train_model',
-        bash_command='{{ params.python }} "{{ params.script }}" --timestamp {{ ti.xcom_pull(task_ids="extract_timestamp", key="timestamp") }}',
-        params={
-            'python': get_python(),
-            'script': get_script_path('src/train/train_model.py')
-        },
+        bash_command=f'cd {PROJECT_ROOT} && python3 src/train/train_model.py --timestamp 20250709_105303',
     )
 
     # Task 5: A/B Evaluation
     ab_evaluation = BashOperator(
         task_id='ab_evaluation',
-        bash_command='{{ params.python }} "{{ params.script }}" --timestamp {{ ti.xcom_pull(task_ids="extract_timestamp", key="timestamp") }} --auto-promote',
-        params={
-            'python': get_python(),
-            'script': get_script_path('src/evaluation/ab_evaluation.py')
-        },
+        bash_command=f'cd {PROJECT_ROOT} && python3 src/evaluation/ab_evaluation.py --timestamp 20250709_105303 --auto-promote',
     )
 
     # Orchestration
