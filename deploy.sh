@@ -2,38 +2,25 @@
 set -e
 
 PROJECT_DIR="/home/ubuntu/loanflow/loan-eligibility-prediction-mlops"
-BACKUP_DIR="/home/ubuntu/loanflow/backup-$(date +%Y%m%d_%H%M%S)"
 
 echo "🚀 Starting deployment..."
 
-# Backup critical data
-echo "📦 Creating backup..."
-mkdir -p $BACKUP_DIR
-cp -r $PROJECT_DIR/mlruns $BACKUP_DIR/ 2>/dev/null || true
-cp -r $PROJECT_DIR/airflow/airflow.db $BACKUP_DIR/ 2>/dev/null || true
-cp $PROJECT_DIR/.env $BACKUP_DIR/ 2>/dev/null || true
+# Update code
+echo "📥 Updating code..."
+cd $PROJECT_DIR
+git fetch origin main
+
 
 # Stop services
 echo "🛑 Stopping services..."
 sudo systemctl stop airflow || true
 sudo systemctl stop mlflow || true
 
-# Update code
-echo "📥 Updating code..."
-cd $PROJECT_DIR
-git pull origin
-
 # Check if requirements changed
 if git diff HEAD~1 HEAD --name-only | grep -q "requirements.txt"; then
     echo "📦 Installing dependencies..."
     pip install -r requirements.txt
 fi
-
-# Restore critical data
-echo "🔄 Restoring data..."
-cp -r $BACKUP_DIR/mlruns . 2>/dev/null || true
-cp -r $BACKUP_DIR/airflow.db airflow/ 2>/dev/null || true
-cp $BACKUP_DIR/.env . 2>/dev/null || true
 
 # Start services
 echo "🚀 Starting services..."
