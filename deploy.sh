@@ -8,7 +8,7 @@ echo "🚀 Starting deployment..."
 # Update code
 echo "📥 Updating code..."
 cd $PROJECT_DIR
-git fetch origin main
+git pull origin main
 
 
 # Stop services
