@@ -13,6 +13,7 @@ load_dotenv()
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
+
 def extract_latest_timestamp(**kwargs):
     s3 = boto3.client('s3')
     bucket = 'loan-eligibility-mlops'
@@ -29,17 +30,21 @@ def extract_latest_timestamp(**kwargs):
     kwargs['ti'].xcom_push(key='timestamp', value=latest)
     return latest
 
+
 def get_timestamp_arg(**kwargs):
     # Used for templating BashOperator command
     return kwargs['ti'].xcom_pull(key='timestamp', task_ids='extract_timestamp')
+
 
 def get_python():
     # Use the current python executable
     return os.environ.get('PYTHON', 'python3')
 
+
 def get_script_path(script):
     # Helper to get script path relative to project root
     return os.path.join(PROJECT_ROOT, script)
+
 
 def_args = {
     'owner': 'airflow',
@@ -50,14 +55,13 @@ def_args = {
 default_python = get_python()
 
 with DAG(
-    dag_id='loan_eligibility_mlops_pipeline',
-    default_args=def_args,
-    description='Loan Eligibility ML pipeline orchestrated with Airflow',
-    schedule=None,
-    catchup=False,
-    tags=['mlops', 'loan-eligibility'],
+        dag_id='loan_eligibility_mlops_pipeline',
+        default_args=def_args,
+        description='Loan Eligibility ML pipeline orchestrated with Airflow',
+        schedule=None,
+        catchup=False,
+        tags=['mlops', 'loan-eligibility'],
 ) as dag:
-    
     # Task 1: Download dataset
     download_dataset = BashOperator(
         task_id='download_dataset',

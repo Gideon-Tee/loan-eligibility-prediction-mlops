@@ -17,13 +17,11 @@ cp $PROJECT_DIR/.env $BACKUP_DIR/ 2>/dev/null || true
 echo "🛑 Stopping services..."
 sudo systemctl stop airflow || true
 sudo systemctl stop mlflow || true
-pkill -f "model_server.py" || true
 
 # Update code
 echo "📥 Updating code..."
 cd $PROJECT_DIR
-git fetch origin
-git reset --hard origin/main
+git pull origin
 
 # Check if requirements changed
 if git diff HEAD~1 HEAD --name-only | grep -q "requirements.txt"; then
