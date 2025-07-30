@@ -3,6 +3,8 @@ name: Deploy MLOps Pipeline
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'src/inference/**'
   workflow_dispatch:
 
 jobs:
