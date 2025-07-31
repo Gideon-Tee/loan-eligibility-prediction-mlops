@@ -8,12 +8,14 @@ case "$1" in
         echo "Starting services..."
         sudo systemctl start airflow
         sudo systemctl start mlflow
+        sudo systemctl start monitoring
         echo "Services started"
         ;;
     stop)
         echo "Stopping services..."
         sudo systemctl stop airflow
         sudo systemctl stop mlflow
+        sudo systemctl stop monitoring
         echo "Services stopped"
         ;;
     restart)
@@ -25,6 +27,7 @@ case "$1" in
         echo "Service status:"
         sudo systemctl is-active airflow > /dev/null && echo "✅ Airflow running" || echo "❌ Airflow stopped"
         sudo systemctl is-active mlflow > /dev/null && echo "✅ MLflow running" || echo "❌ MLflow stopped"
+        sudo systemctl is-active monitoring > /dev/null && echo "✅ Monitoring running" || echo "❌ Monitoring stopped"
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|status}"

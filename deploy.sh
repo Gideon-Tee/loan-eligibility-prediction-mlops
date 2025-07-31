@@ -15,6 +15,7 @@ git pull origin main
 echo "🛑 Stopping services..."
 sudo systemctl stop airflow || true
 sudo systemctl stop mlflow || true
+sudo systemctl stop monitoring || true
 
 # Check if requirements changed
 if git diff HEAD~1 HEAD --name-only | grep -q "requirements.txt"; then
@@ -26,11 +27,13 @@ fi
 echo "🚀 Starting services..."
 sudo systemctl start airflow
 sudo systemctl start mlflow
+sudo systemctl start monitoring
 
 # Health check
 echo "🔍 Health check..."
 sleep 15
 sudo systemctl is-active airflow && echo "✅ Airflow running" || echo "❌ Airflow failed"
 sudo systemctl is-active mlflow && echo "✅ MLflow running" || echo "❌ MLflow failed"
+sudo systemctl is-active monitoring && echo "✅ Monitoring running" || echo "❌ Monitoring failed"
 
 echo "✅ Deployment complete!"

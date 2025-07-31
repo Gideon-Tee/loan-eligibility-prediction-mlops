@@ -4,6 +4,7 @@ import boto3
 import joblib
 import numpy
 import os
+from datetime import datetime
 
 S3_BUCKET = 'loan-eligibility-mlops'
 PROD_MODEL_KEY = 'models/production/model.pkl'
@@ -26,6 +27,45 @@ def load_model():
         s3.download_file(S3_BUCKET, PROD_MODEL_KEY, LOCAL_MODEL_PATH)
         model_cache['model'] = joblib.load(LOCAL_MODEL_PATH)
     return model_cache['model']
+
+def log_prediction_for_monitoring(features, prediction):
+    """Log prediction for monitoring"""
+    try:
+        timestamp = datetime.now()
+        log_entry = {
+            'timestamp': timestamp.isoformat(),
+            'model_version': 'v1.0',
+            'features': features,
+            'prediction': prediction['prediction'],
+            'prediction_label': prediction['prediction_label'],
+            'confidence': prediction.get('confidence', None),
+            'probabilities': prediction.get('probabilities', None)
+        }
+        
+        # Store in S3
+        s3 = boto3.client('s3')
+        date_str = timestamp.strftime('%Y-%m-%d')
+        s3_key = f"monitoring/predictions/{date_str}/predictions.jsonl"
+        
+        # Get existing content
+        try:
+            obj = s3.get_object(Bucket=S3_BUCKET, Key=s3_key)
+            existing_content = obj['Body'].read().decode('utf-8')
+        except:
+            existing_content = ""
+        
+        # Append new line
+        new_content = existing_content + json.dumps(log_entry) + '\n'
+        
+        # Upload back to S3
+        s3.put_object(
+            Bucket=S3_BUCKET,
+            Key=s3_key,
+            Body=new_content.encode('utf-8'),
+            ContentType='application/json'
+        )
+    except Exception as e:
+        print(f"Monitoring logging error: {e}")
 
 def lambda_handler(event, context):
     try:
@@ -101,6 +141,12 @@ def handle_predict(body):
     if prediction_proba is not None:
         result['confidence'] = float(max(prediction_proba[0]))
         result['probabilities'] = prediction_proba[0].tolist()
+    
+    # Log prediction for monitoring
+    try:
+        log_prediction_for_monitoring(features, result)
+    except Exception as e:
+        print(f"Monitoring logging failed: {e}")
     
     return {
         'statusCode': 200,
