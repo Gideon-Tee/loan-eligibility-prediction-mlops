@@ -2,7 +2,7 @@
 
 # Configuration
 AWS_REGION="eu-west-1"
-AWS_PROFILE="mlops"
+export AWS_PROFILE="mlops"
 ECR_REPO="loanflow-inference"
 LAMBDA_FUNCTION="loanflow-inference"
 IMAGE_TAG="latest"
@@ -27,6 +27,18 @@ echo "🚀 Updating Lambda function..."
 aws lambda update-function-code \
     --function-name ${LAMBDA_FUNCTION} \
     --image-uri ${ECR_URI}:${IMAGE_TAG} \
+    --region ${AWS_REGION}
+
+echo "⏳ Waiting for function update to complete..."
+aws lambda wait function-updated \
+    --function-name ${LAMBDA_FUNCTION} \
+    --region ${AWS_REGION}
+
+echo "⚙️ Updating Lambda configuration..."
+aws lambda update-function-configuration \
+    --function-name ${LAMBDA_FUNCTION} \
+    --memory-size 512 \
+    --timeout 30 \
     --region ${AWS_REGION}
 
 echo "✅ Deployment complete!"

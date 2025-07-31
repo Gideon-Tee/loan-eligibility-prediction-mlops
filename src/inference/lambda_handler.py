@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import boto3
 import joblib
+import numpy
 import os
 
 S3_BUCKET = 'loan-eligibility-mlops'
@@ -10,6 +11,14 @@ LOCAL_MODEL_PATH = '/tmp/model_production.pkl'
 
 # Global model cache
 model_cache = {}
+
+def get_cors_headers():
+    return {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+    }
 
 def load_model():
     if 'model' not in model_cache:
@@ -34,7 +43,7 @@ def lambda_handler(event, context):
         if path == '/health' and http_method == 'GET':
             return {
                 'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
+                'headers': get_cors_headers(),
                 'body': json.dumps({
                     'status': 'healthy',
                     'message': 'LoanFlow Inference Server is running'
@@ -49,14 +58,14 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': 404,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': get_cors_headers(),
             'body': json.dumps({'error': 'Endpoint not found'})
         }
         
     except Exception as e:
         return {
             'statusCode': 500,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': get_cors_headers(),
             'body': json.dumps({'error': str(e)})
         }
 
@@ -65,7 +74,7 @@ def handle_predict(body):
     if not features:
         return {
             'statusCode': 400,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': get_cors_headers(),
             'body': json.dumps({'error': 'No features provided'})
         }
     
@@ -75,7 +84,7 @@ def handle_predict(body):
     else:
         return {
             'statusCode': 400,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': get_cors_headers(),
             'body': json.dumps({'error': 'Features must be a dict'})
         }
     
@@ -95,7 +104,7 @@ def handle_predict(body):
     
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json'},
+        'headers': get_cors_headers(),
         'body': json.dumps(result)
     }
 
@@ -104,7 +113,7 @@ def handle_predict_batch(body):
     if not features_list or not isinstance(features_list, list):
         return {
             'statusCode': 400,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': get_cors_headers(),
             'body': json.dumps({'error': 'Features must be a list of records'})
         }
     
@@ -126,7 +135,7 @@ def handle_predict_batch(body):
     
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json'},
+        'headers': get_cors_headers(),
         'body': json.dumps({
             'predictions': results,
             'count': len(results)
