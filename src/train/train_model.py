@@ -16,8 +16,9 @@ import mlflow
 import mlflow.sklearn
 
 # Set MLflow tracking to use project directory
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+PROJECT_ROOT = '/home/ubuntu/loanflow/loan-eligibility-prediction-mlops'
 mlflow.set_tracking_uri(f"file://{PROJECT_ROOT}/mlruns")
+mlflow.set_experiment("loanflow_training")
 
 CLEANED_PREFIX = 'cleaned/'
 MODELS_PREFIX = 'models/'
@@ -110,7 +111,11 @@ def main():
             # Log model artifact
             model_path = f'artifacts/{name}_model.pkl'
             joblib.dump(model, model_path)
-            mlflow.sklearn.log_model(model, artifact_path="model")
+            try:
+                mlflow.sklearn.log_model(model, "model")
+            except Exception as e:
+                print(f"Warning: Could not log model to MLflow: {e}")
+                # Continue without MLflow model logging
             print(f"MLflow run for {name}: {mlflow.get_artifact_uri('model')}")
 
     # Save and upload best model
